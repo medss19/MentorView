@@ -17,7 +17,8 @@ class PDFGenerator {
           fs.mkdirSync(tempDir, { recursive: true });
         }
 
-        doc.pipe(fs.createWriteStream(filepath));
+        const stream = fs.createWriteStream(filepath);
+        doc.pipe(stream);
 
         // Header
         doc.fontSize(20).text('Student Evaluation Marksheet', 50, 50);
@@ -27,7 +28,6 @@ class PDFGenerator {
         let yPosition = 140;
 
         assignments.forEach((assignment, index) => {
-          // Student Info
           doc.fontSize(14).text(`${index + 1}. ${assignment.student.name} (${assignment.student.rollNo})`, 50, yPosition);
           yPosition += 25;
 
@@ -67,8 +67,13 @@ class PDFGenerator {
 
         doc.end();
 
-        doc.on('end', () => {
+        // Wait for stream to finish writing
+        stream.on('finish', () => {
           resolve(filepath);
+        });
+        
+        stream.on('error', (err) => {
+          reject(err);
         });
 
       } catch (error) {
