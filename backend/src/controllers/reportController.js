@@ -31,6 +31,9 @@ class ReportController {
       // Generate PDF
       const filepath = await pdfGenerator.generateMarksheet(mentorData, assignments);
       
+      // Small delay to ensure file is fully written
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Send file
       res.download(filepath, (err) => {
         if (err) {
