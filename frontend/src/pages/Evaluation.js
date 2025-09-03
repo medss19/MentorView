@@ -45,11 +45,19 @@ const Evaluation = () => {
   };
 
   const handleMarkChange = (assignmentId, parameterId, value) => {
+    // Find the parameter to get maxMarks
+    const parameter = parameters.find(p => p.id === parameterId);
+    if (!parameter) return;
+    
+    // Parse and validate the value
+    const numValue = parseInt(value) || 0;
+    const validatedValue = Math.min(Math.max(numValue, 0), parameter.maxMarks);
+    
     setMarks(prev => ({
       ...prev,
       [assignmentId]: {
         ...prev[assignmentId],
-        [parameterId]: parseInt(value) || 0
+        [parameterId]: validatedValue
       }
     }));
   };
@@ -99,7 +107,10 @@ const Evaluation = () => {
   };
 
   const isMarked = (assignment) => {
-    return assignment.marks && assignment.marks.length === parameters.length;
+    // Check if assignment has saved marks for all parameters
+    const hasSavedMarks = assignment.marks && assignment.marks.length === parameters.length;
+    
+    return hasSavedMarks;
   };
 
   const getFilteredAssignments = () => {
@@ -145,7 +156,8 @@ const Evaluation = () => {
             </button>
           </div>
         </div>
-        {state.assignments.length > 0 && !state.assignments[0]?.isLocked && (
+        {state.assignments.length > 0 && !state.assignments.some(a => a.isLocked) && 
+         state.assignments.every(assignment => isMarked(assignment)) && (
           <button
             onClick={submitAllAssignments}
             disabled={submitting}
@@ -153,6 +165,23 @@ const Evaluation = () => {
           >
             {submitting ? 'Submitting...' : 'Submit All Evaluations'}
           </button>
+        )}
+        
+        {state.assignments.length > 0 && !state.assignments.some(a => a.isLocked) && 
+         !state.assignments.every(assignment => isMarked(assignment)) && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <p className="text-yellow-800 font-medium">
+                Complete all evaluations to submit
+              </p>
+            </div>
+            <p className="text-yellow-700 text-sm mt-1">
+              {state.assignments.filter(a => !isMarked(a)).length} student(s) still need to be evaluated before you can submit all evaluations.
+            </p>
+          </div>
         )}
       </div>
 
@@ -198,6 +227,13 @@ const Evaluation = () => {
                         max={parameter.maxMarks}
                         value={marks[assignment.id]?.[parameter.id] || 0}
                         onChange={(e) => handleMarkChange(assignment.id, parameter.id, e.target.value)}
+                        onBlur={(e) => {
+                          // Ensure validation on blur (when user finishes typing)
+                          const currentValue = marks[assignment.id]?.[parameter.id] || 0;
+                          if (currentValue > parameter.maxMarks) {
+                            handleMarkChange(assignment.id, parameter.id, parameter.maxMarks.toString());
+                          }
+                        }}
                         disabled={assignment.isLocked}
                         className="w-20 px-3 py-1 border rounded text-center disabled:bg-gray-100"
                       />
