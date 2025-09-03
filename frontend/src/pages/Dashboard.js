@@ -1,5 +1,5 @@
 // frontend/src/pages/Dashboard.js
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useEvaluation } from '../context/EvaluationContext';
 import { useAssignments } from '../hooks/useAssignments';
 import StatsCard from '../components/Dashboard/StatsCard';
@@ -7,8 +7,50 @@ import AssignmentsList from '../components/Dashboard/AssignmentsList';
 
 const Dashboard = () => {
   const { state } = useEvaluation();
-  const { assignments, loading } = state;
+  const { assignments, loading, mentor } = state;
   const { fetchAssignments } = useAssignments();
+  const [downloading, setDownloading] = useState(false);
+
+  useEffect(() => {
+    fetchAssignments();
+  }, [fetchAssignments]);
+
+  const downloadPDF = async () => {
+    try {
+      setDownloading(true);
+      
+      // Get mentor ID - fallback to hardcoded if needed
+      const mentorId = mentor?.id || 'cmf2pk1gk0004v2lwr3nw88em';
+      console.log('Attempting PDF download for mentor:', mentorId);
+      
+      const response = await fetch(`http://localhost:5000/api/reports/marksheet/${mentorId}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('PDF generation error:', errorText);
+        alert(`Failed to generate PDF: ${errorText}`);
+        return;
+      }
+
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Marksheet_${mentor?.name || 'Mentor'}_${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      alert('✅ PDF downloaded successfully!');
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('❌ Failed to download PDF: ' + error.message);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   useEffect(() => {
     fetchAssignments();
@@ -53,6 +95,34 @@ const Dashboard = () => {
           color={stats.isSubmitted ? "green" : "red"}
         />
       </div>
+
+      {/* Download PDF Button */}
+      {stats.isSubmitted && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800">Final Marksheet</h2>
+              <p className="text-gray-600">All evaluations completed. Download PDF marksheet.</p>
+            </div>
+            <button
+              onClick={downloadPDF}
+              disabled={downloading}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg flex items-center gap-2 transition-colors"
+            >
+              {downloading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  📄 Download PDF
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Recent Assignments */}
       <div className="bg-white rounded-lg shadow p-6">
