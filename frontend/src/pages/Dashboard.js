@@ -60,7 +60,7 @@ const Dashboard = () => {
     totalStudents: assignments.length,
     markedStudents: assignments.filter(a => a.marks?.length > 0).length,
     unmarkedStudents: assignments.filter(a => !a.marks?.length).length,
-    isSubmitted: assignments.every(a => a.isLocked)
+    isSubmitted: assignments.length > 0 && assignments.every(a => a.isLocked)
   };
 
   if (loading) {
