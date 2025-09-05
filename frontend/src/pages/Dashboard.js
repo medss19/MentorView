@@ -7,7 +7,7 @@ import AssignmentsList from '../components/Dashboard/AssignmentsList';
 
 const Dashboard = () => {
   const { state } = useEvaluation();
-  const { assignments, loading, mentor } = state;
+  const { assignments, loading, currentMentor } = state;
   const { fetchAssignments } = useAssignments();
   const [downloading, setDownloading] = useState(false);
 
@@ -19,9 +19,14 @@ const Dashboard = () => {
     try {
       setDownloading(true);
       
-      // Get mentor ID - fallback to hardcoded if needed
-      const mentorId = mentor?.id || 'cmf2pk1gk0004v2lwr3nw88em';
-      console.log('Attempting PDF download for mentor:', mentorId);
+      // Get mentor ID from current mentor
+      const mentorId = currentMentor?.id;
+      console.log('Attempting PDF download for mentor:', mentorId, currentMentor?.name);
+      
+      if (!mentorId) {
+        alert('No mentor selected');
+        return;
+      }
       
       const response = await fetch(`http://localhost:5000/api/reports/marksheet/${mentorId}`);
       
@@ -37,7 +42,7 @@ const Dashboard = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Marksheet_${mentor?.name || 'Mentor'}_${Date.now()}.pdf`;
+      a.download = `Marksheet_${currentMentor?.name || 'Mentor'}_${Date.now()}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
