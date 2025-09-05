@@ -5,6 +5,7 @@ const EvaluationContext = createContext();
 
 const initialState = {
   currentMentor: { id: 'cmf2pk1gk0004v2lwr3nw88em', name: 'Dr. Smith', email: 'dr.smith@college.edu' }, // Actual DB data
+  allMentors: [],
   assignments: [],
   availableStudents: [],
   parameters: [],
@@ -18,6 +19,10 @@ function evaluationReducer(state, action) {
       return { ...state, loading: action.payload };
     case 'SET_ERROR':
       return { ...state, error: action.payload, loading: false };
+    case 'SET_MENTORS':
+      return { ...state, allMentors: action.payload };
+    case 'SET_CURRENT_MENTOR':
+      return { ...state, currentMentor: action.payload, assignments: [], availableStudents: [] };
     case 'SET_ASSIGNMENTS':
       return { ...state, assignments: action.payload, loading: false };
     case 'SET_AVAILABLE_STUDENTS':

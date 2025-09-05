@@ -28,12 +28,21 @@ async function main() {
   ]);
 
   // Create mentors
-  const mentor = await prisma.mentor.upsert({
+  const mentor1 = await prisma.mentor.upsert({
     where: { email: 'dr.smith@college.edu' },
     update: {},
     create: {
       name: 'Dr. Smith',
       email: 'dr.smith@college.edu'
+    }
+  });
+
+  const mentor2 = await prisma.mentor.upsert({
+    where: { email: 'dr.jones@college.edu' },
+    update: {},
+    create: {
+      name: 'Dr. Jones',
+      email: 'dr.jones@college.edu'
     }
   });
 

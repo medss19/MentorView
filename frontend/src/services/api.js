@@ -35,6 +35,11 @@ class ApiService {
     return this.request(`/assignments/mentor/${mentorId}`);
   }
 
+  // Mentor APIs
+  async getAllMentors() {
+    return this.request('/mentors');
+  }
+
   async assignStudent(mentorId, studentId) {
     return this.request('/assignments/assign', {
       method: 'POST',
